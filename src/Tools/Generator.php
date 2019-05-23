@@ -86,6 +86,9 @@ class Generator
         ];
         $parsedRoute['headers'] = $rulesToApply['headers'] ?? [];
 
+        if(isset($rulesToApply['handler']) && is_callable($rulesToApply['handler']))
+            $parsedRoute = call_user_func($rulesToApply['handler'],$parsedRoute,$route,$method,$controller);
+
         return $parsedRoute;
     }
 
