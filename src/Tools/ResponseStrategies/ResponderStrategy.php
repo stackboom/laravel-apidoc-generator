@@ -76,20 +76,36 @@ class ResponderStrategy
 
     /**
      * @param $name
-     * @param $namespaces
+     * @param $fullname
      * @return string|null
      */
-    private function guessClass($name, $namespaces){
-        if(isset($namespaces[$name]) && class_exists($namespaces[$name])){
-            return $namespaces[$name];
-        }
-        foreach ($namespaces as $namespace){
-            $pretty = '\\'.trim($namespace,'\\');
-            if(class_exists($pretty))
-                return $pretty;
+    private function guessClass($name, $fullname){
+        if(isset($fullname[$name]) && class_exists($fullname[$name])){
+            return $fullname[$name];
         }
         if(app()->has($name)){
             return app($name);
         }
+    }
+
+    /**
+     * Parse the class name and format according to the root namespace.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function qualifyClass($name)
+    {
+        $name = ltrim($name, '\\/');
+
+        $rootNamespace = app()->getNamespace();
+
+        if (Str::startsWith($name, $rootNamespace)) {
+            return $name;
+        }
+
+        $name = str_replace('/', '\\', $name);
+
+        return $this->qualifyClass(trim($rootNamespace, '\\').'\\'.$name);
     }
 }
