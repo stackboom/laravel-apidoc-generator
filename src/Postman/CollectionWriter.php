@@ -41,11 +41,27 @@ class CollectionWriter
                     'description' => '',
                     'item' => $routes->map(function ($route) {
                         $mode = $route['methods'][0] === 'PUT' ? 'urlencoded' : 'formdata';
-
+                        $parsed_uri = parse_url(url($route['uri']));
                         return [
                             'name' => $route['title'] != '' ? $route['title'] : url($route['uri']),
                             'request' => [
-                                'url' => url($route['uri']),
+                                'url' => [
+                                    'raw'=>url($route['uri']),
+                                    'protocol'=> $parsed_uri['schema']??'http',
+                                    "host"=> [
+                                        $parsed_uri['host']??'localhost'
+                                    ],
+                                    "port"=>$parsed_uri['port']??'80',
+                                    "query"=>collect($route['queryParameters'])->map(function($parameter, $key){
+                                        return [
+                                            'key' => $key,
+                                            'value' => isset($parameter['value']) ? $parameter['value'] : '',
+                                            'required' => isset($parameter['required']) ? $parameter['required'] : false,
+                                            'enabled' => true,
+                                        ];
+                                    })->values(),
+                                    'path'=>explode('/',$route['uri'])
+                                ],
                                 'method' => $route['methods'][0],
                                 'body' => [
                                     'mode' => $mode,
